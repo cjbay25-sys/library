@@ -1,0 +1,43 @@
+﻿@model List<library.Models.Note>
+
+@{
+    ViewData["Title"] = "Notes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1>Notes</h1>
+        <p class="text-muted">@Model.Count notes in your notepad</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Add a note</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Body</th>
+            <th>Created On</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var note in Model)
+        {
+            <tr>
+                <td>@note.Title</td>
+                <td>@(note.Body ?? "—")</td>
+                <td>@note.CreatedOn.ToString("yyyy-MM-dd")</td>
+                <td>
+                    <a asp-action="Edit"
+                       asp-route-id="@note.NoteId"
+                       class="btn btn-sm btn-warning">Edit</a>
+
+                    <a asp-action="Delete"
+                       asp-route-id="@note.NoteId"
+                       class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
