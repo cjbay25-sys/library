@@ -1,112 +1,127 @@
-﻿using library.Data;
+﻿
+using Npgsql;
+using library.Data;
 using library.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
-namespace library.Controllers;
-
-public class MembersController : Controller
+namespace library.Controllers
 {
-    private readonly MemberRepository _members;
-
-    public MembersController(MemberRepository members)
+    public class MembersController : Controller
     {
-        _members = members;
-    }
+        private readonly MemberRepository _members;
 
-    // GET: /Members
-    public async Task<IActionResult> Index()
-    {
-        var members = await _members.GetAllAsync();
-        return View(members);
-    }
-
-    // GET: /Members/Create
-    public IActionResult Create()
-    {
-        return View(new Member());
-    }
-
-    // POST: /Members/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Member member)
-    {
-        if (!IsValidMember(member))
+        public MembersController(MemberRepository members)
         {
+            _members = members;
+        }
+
+        // GET: /Members
+        public async Task<IActionResult> Index()
+        {
+            var members = await _members.GetAllAsync();
+            return View(members);
+        }
+
+        // GET: /Members/Create
+        public IActionResult Create()
+        {
+            return View(new Member());
+        }
+
+        // POST: /Members/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Member member)
+        {
+            if (!IsValidMember(member))
+            {
+                return View(member);
+            }
+
+            await _members.AddAsync(member);
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: /Members/Edit/5
+        public async Task<IActionResult> Edit(long id)
+        {
+            var member = await _members.GetByIdAsync(id);
+
+            if (member == null)
+            {
+                return NotFound();
+            }
+
             return View(member);
         }
 
-        await _members.AddAsync(member);
-        return RedirectToAction(nameof(Index));
-    }
-
-    // GET: /Members/Edit/5
-    public async Task<IActionResult> Edit(long id)
-    {
-        var member = await _members.GetByIdAsync(id);
-
-        if (member == null)
+        // POST: /Members/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Member member)
         {
-            return NotFound();
+            if (!IsValidMember(member))
+            {
+                return View(member);
+            }
+
+            var existingMember = await _members.GetByIdAsync(member.MemberId);
+
+            if (existingMember == null)
+            {
+                return NotFound();
+            }
+
+            await _members.UpdateAsync(member);
+            return RedirectToAction(nameof(Index));
         }
 
-        return View(member);
-    }
-
-    // POST: /Members/Edit
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Member member)
-    {
-        if (!IsValidMember(member))
+        // GET: /Members/Delete/5
+        public async Task<IActionResult> Delete(long id)
         {
+            var member = await _members.GetByIdAsync(id);
+
+            if (member == null)
+            {
+                return NotFound();
+            }
+
             return View(member);
         }
 
-        var existingMember = await _members.GetByIdAsync(member.MemberId);
-
-        if (existingMember == null)
+        // POST: /Members/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(long id)
         {
-            return NotFound();
+            try
+            {
+                await _members.DeleteAsync(id);
+            }
+            catch (PostgresException ex) when (
+                ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+            {
+                var member = await _members.GetByIdAsync(id);
+
+                if (member == null)
+                {
+                    return NotFound();
+                }
+
+                ViewBag.Error = "This member has loans on record, so the database will not delete them.";
+
+                return View("Delete", member);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
-        await _members.UpdateAsync(member);
-        return RedirectToAction(nameof(Index));
-    }
-
-    // GET: /Members/Delete/5
-    public async Task<IActionResult> Delete(long id)
-    {
-        var member = await _members.GetByIdAsync(id);
-
-        if (member == null)
+        private static bool IsValidMember(Member member)
         {
-            return NotFound();
+            return !string.IsNullOrWhiteSpace(member.FullName)
+                && new[] { "Regular", "Student", "Faculty" }
+                    .Contains(member.MemberType);
         }
-
-        return View(member);
-    }
-
-    // POST: /Members/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(long id)
-    {
-        var member = await _members.GetByIdAsync(id);
-
-        if (member == null)
-        {
-            return NotFound();
-        }
-
-        await _members.DeleteAsync(id);
-        return RedirectToAction(nameof(Index));
-    }
-
-    private static bool IsValidMember(Member member)
-    {
-        return !string.IsNullOrWhiteSpace(member.FullName)
-            && new[] { "Regular", "Student", "Faculty" }
-                .Contains(member.MemberType);
     }
 }
