@@ -37,7 +37,7 @@ public class MemberRepository
         await using var reader = await command.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
-        {
+        { 
             members.Add(ReadMember(reader));
         }
 

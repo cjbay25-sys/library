@@ -18,7 +18,7 @@ public class BookRepository
     // The positions 0 to 3 match the column order in both SELECTs above.
     private static Book ReadBook(NpgsqlDataReader reader)
     {
-        return new Book
+        return new Book 
         {
             BookId = reader.GetInt64(0),
             Title = reader.GetString(1),
