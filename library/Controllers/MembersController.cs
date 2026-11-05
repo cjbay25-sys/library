@@ -39,8 +39,21 @@ namespace library.Controllers
                 return View(member);
             }
 
-            await _members.AddAsync(member);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _members.AddAsync(member);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (PostgresException ex) when (
+                ex.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                ModelState.AddModelError(
+                    nameof(Member.Email),
+                    "This email is already being used by another member."
+                );
+
+                return View(member);
+            }
         }
 
         // GET: /Members/Edit/5
@@ -73,8 +86,21 @@ namespace library.Controllers
                 return NotFound();
             }
 
-            await _members.UpdateAsync(member);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _members.UpdateAsync(member);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (PostgresException ex) when (
+                ex.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                ModelState.AddModelError(
+                    nameof(Member.Email),
+                    "This email is already being used by another member."
+                );
+
+                return View(member);
+            }
         }
 
         // GET: /Members/Delete/5
