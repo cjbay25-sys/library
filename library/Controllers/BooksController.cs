@@ -25,7 +25,7 @@ namespace library.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            return View(new Book());
         }
 
         // Save the new book to the database
@@ -33,12 +33,24 @@ namespace library.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Book book)
         {
+            // Check that the price is positive.
+            if (book.Price.HasValue &&
+                (book.Price.Value < 0.01m || book.Price.Value > 99999.99m))
+            {
+                ModelState.AddModelError(
+                    nameof(Book.Price),
+                    "The price must be from 0.01 to 99,999.99."
+                );
+            }
+
+            // Do not save if validation fails.
             if (!ModelState.IsValid)
             {
                 return View(book);
             }
 
             await _repository.AddAsync(book);
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -69,6 +81,7 @@ namespace library.Controllers
             }
 
             await _repository.DeleteAsync(id);
+
             return RedirectToAction(nameof(Index));
         }
     }
