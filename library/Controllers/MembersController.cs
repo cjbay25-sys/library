@@ -111,7 +111,7 @@ namespace library.Controllers
         // POST: /Members/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(long id)
+        public async Task<IActionResult> DeleteConfirmed(long id);
                 // GET /Members/Details/5 : one member and their loans.
     public async Task<IActionResult> Details(long id)
         {

@@ -329,3 +329,192 @@ footer.footer {
     border-top: 1px solid var(--border);
     padding: 25px 0;
 }
+/* ===== Task 12: my own design ===== */
+:root {
+    --c-out: #f5b942;
+    --c-overdue: #ff6b6b;
+    --c-returned: #4cc38a;
+    --card-bg: rgba(255, 255, 255, 0.04);
+    --card-border: rgba(255, 255, 255, 0.08);
+}
+
+/* status pills */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .2rem .7rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.pill-out {
+    color: var(--c-out);
+    background: rgba(245,185,66,.12);
+    border-color: rgba(245,185,66,.35);
+}
+
+.pill-overdue {
+    color: var(--c-overdue);
+    background: rgba(255,107,107,.12);
+    border-color: rgba(255,107,107,.35);
+}
+
+.pill-returned {
+    color: var(--c-returned);
+    background: rgba(76,195,138,.12);
+    border-color: rgba(76,195,138,.35);
+}
+
+/* summary boxes */
+.stat {
+    border-radius: .75rem;
+    padding: 1rem 1.25rem;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: .85rem;
+    opacity: .7;
+    margin-top: .25rem;
+}
+
+.stat-out .stat-number {
+    color: var(--c-out);
+}
+
+.stat-overdue .stat-number {
+    color: var(--c-overdue);
+}
+
+.stat-returned .stat-number {
+    color: var(--c-returned);
+}
+
+/* one card per loan */
+.loan-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    padding: 1rem 1.1rem;
+    border-radius: .75rem;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-left-width: 5px;
+}
+
+.loan-out {
+    border-left-color: var(--c-out);
+}
+
+.loan-overdue {
+    border-left-color: var(--c-overdue);
+}
+
+.loan-returned {
+    border-left-color: var(--c-returned);
+}
+
+.loan-book {
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.3;
+}
+
+.loan-meta {
+    font-size: .85rem;
+    opacity: .75;
+}
+
+.loan-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* forms and the member page */
+.form-card {
+    max-width: 40rem;
+    padding: 1.5rem;
+    border-radius: .75rem;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+}
+
+.form-hint {
+    font-size: .85rem;
+    opacity: .65;
+    margin-top: .25rem;
+}
+
+.avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: rgba(110,150,255,.2);
+    color: #9db8ff;
+}
+
+/* messages */
+.msg {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    padding: .9rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: .6rem;
+    border-left: 5px solid;
+}
+
+.msg-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.msg-error {
+    background: rgba(255,107,107,.12);
+    border-color: var(--c-overdue);
+    color: #ffb3b3;
+}
+
+.validation-summary-errors {
+    padding: .75rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: .6rem;
+    background: rgba(255,107,107,.12);
+    border-left: 5px solid var(--c-overdue);
+    color: #ffb3b3 !important;
+}
+
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 1.1rem;
+    }
+
+.field-validation-error {
+    display: block;
+    margin-top: .25rem;
+    font-size: .85rem;
+    color: #ff8f8f !important;
+}
+
+.input-validation-error {
+    border-color: var(--c-overdue) !important;
+    box-shadow: 0 0 0 .15rem rgba(255,107,107,.25) !important;
+}
