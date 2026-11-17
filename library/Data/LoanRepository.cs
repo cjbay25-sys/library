@@ -137,6 +137,21 @@ public class LoanRepository
 
     // RETURN: mark a loan as returned today.
     public async Task ReturnAsync(long loanId)
+            // READ: one member's loans, newest first.
+    public async Task<List<LoanView>> GetByMemberAsync(long memberId)
+    {
+        // 1. The SQL: the same as GetAllAsync, for one member only.
+        // 2. An empty list, to fill.
+        // 3. A command that will run the SQL.
+        // 4. Give the command the member's id.
+        // 5. Run it, and get a reader for the rows.
+        while (/* 6. there is another row to read */)
+        {
+            // 7. Turn the row into a LoanView and add it to the list.
+        }
+
+        // 8. Give the list back.
+    }
     {
         const string sql =
             "UPDATE lending.loan SET returned_on = CURRENT_DATE " +

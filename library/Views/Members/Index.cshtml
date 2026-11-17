@@ -18,7 +18,7 @@
             <th>Full Name</th>
             <th>Email</th>
             <th>Member Type</th>
-            <th style="width:10rem"></th>
+            <th style="width:15rem"></th>
         </tr>
     </thead>
     <tbody>
@@ -34,6 +34,7 @@
                     </span>
                 </td>
                 <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@member.MemberId" class="btn btn-sm btn-outline-primary">Loans</a>
                     <a asp-action="Edit"
                        asp-route-id="@member.MemberId"
                        class="btn btn-sm btn-outline-secondary">Edit</a>
