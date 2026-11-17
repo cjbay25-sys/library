@@ -29,4 +29,60 @@ public class LoansController : Controller
         var loans = await _loans.GetAllAsync();
         return View(loans);
     }
+
+    // Fills the Borrow form's two dropdowns from the database.
+    private async Task FillDropdownsAsync()
+    {
+        ViewBag.Members = new SelectList(
+            await _members.GetAllAsync(),
+            "MemberId",
+            "FullName");
+
+        ViewBag.Books = new SelectList(
+            await _books.GetAllAsync(),
+            "BookId",
+            "Title");
+    }
+
+    // GET /Loans/Borrow : the empty Borrow form.
+    [HttpGet]
+    public async Task<IActionResult> Borrow()
+    {
+        await FillDropdownsAsync();
+        return View(new BorrowForm());
+    }
+
+    // POST /Loans/Borrow : the form was submitted.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Borrow(BorrowForm form)
+    {
+        // 1. Check whether every rule on the form was kept.
+        if (ModelState.IsValid)
+        {
+            // 2. Try to borrow the book, and keep the answer.
+            bool saved = await _loans.BorrowAsync(
+                form.MemberId!.Value,
+                form.BookId!.Value,
+                form.DaysAllowed);
+
+            // 3. Check whether the loan was saved.
+            if (saved)
+            {
+                // 4. Go back to the list of loans.
+                return RedirectToAction(nameof(Index));
+            }
+
+            // 5. Explain why nothing was saved.
+            ModelState.AddModelError(
+                "",
+                $"This member already has {LoanRepository.MaxOpenLoans} books out. Nothing was saved.");
+        }
+
+        // 6. Fill both dropdowns again.
+        await FillDropdownsAsync();
+
+        // 7. Show the form again, with what was chosen.
+        return View(form);
+    }
 }
