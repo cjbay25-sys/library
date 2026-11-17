@@ -7,7 +7,7 @@ namespace library.Data;
 // Every SQL statement about loans lives in this one class.
 public class LoanRepository
 {
-    public const int MaxOpenLoans = 3; // the most books one member may have out at once
+    public const int MaxOpenLoans = 3;
 
     private readonly NpgsqlDataSource _dataSource;
 
@@ -38,7 +38,6 @@ public class LoanRepository
     // READ: every loan with its member and book, newest first.
     public async Task<List<LoanView>> GetAllAsync()
     {
-        // 1. SQL: three tables joined, and each loan's status worked out.
         const string sql =
             "SELECT l.loan_id, l.member_id, m.full_name, b.title, l.loaned_on, l.returned_on, l.days_allowed, " +
             "CASE WHEN l.returned_on IS NOT NULL THEN 'Returned' " +
@@ -49,27 +48,21 @@ public class LoanRepository
             "JOIN lending.book b ON l.book_id = b.book_id " +
             "ORDER BY l.loaned_on DESC, l.loan_id DESC;";
 
-        // 2. Create an empty list.
         var loans = new List<LoanView>();
 
-        // 3. Create the command.
         await using var command = _dataSource.CreateCommand(sql);
 
-        // 4. Execute SQL and get the reader.
         await using var reader = await command.ExecuteReaderAsync();
 
-        // 5. Read every row.
         while (await reader.ReadAsync())
         {
-            // 6. Convert the row into a LoanView.
             loans.Add(ReadLoan(reader));
         }
 
-        // 7. Return the list.
         return loans;
     }
 
-    // BORROW: lend one book unless the member already has MaxOpenLoans books.
+    // BORROW: lend one book unless the member already has 3 books out.
     public async Task<bool> BorrowAsync(long memberId, long bookId, int daysAllowed)
     {
         // 1. Open one connection to the database.
@@ -101,36 +94,38 @@ public class LoanRepository
             "SELECT COUNT(*) FROM lending.loan " +
             "WHERE member_id = @memberId AND returned_on IS NULL;";
 
+        long openLoans;
+
         await using (var countCommand = new NpgsqlCommand(countSql, connection, transaction))
         {
             countCommand.Parameters.AddWithValue("memberId", memberId);
 
-            var openLoans = (long)(await countCommand.ExecuteScalarAsync() ?? 0L);
+            openLoans = Convert.ToInt64(await countCommand.ExecuteScalarAsync());
+        }
 
-            // 5. Check whether the member has reached the limit.
-            if (openLoans >= MaxOpenLoans)
-            {
-                // 6. Undo the transaction.
-                await transaction.RollbackAsync();
+        // 5. Check whether the member has reached the limit.
+        if (openLoans >= MaxOpenLoans)
+        {
+            // 6. Undo the transaction.
+            await transaction.RollbackAsync();
 
-                // 7. Report that nothing was borrowed.
-                return false;
-            }
+            // 7. Report that nothing was borrowed.
+            return false;
         }
 
         // 8. Record the loan.
         const string insertSql =
             "INSERT INTO lending.loan " +
-            "(member_id, book_id, loaned_on, days_allowed) " +
-            "VALUES (@memberId, @bookId, CURRENT_DATE, @daysAllowed);";
+            "(member_id, book_id, days_allowed) " +
+            "VALUES (@member_id, @book_id, @days_allowed);";
 
-        await using (var insertCommand = new NpgsqlCommand(insertSql, connection, transaction))
+        await using (var insert = new NpgsqlCommand(insertSql, connection, transaction))
         {
-            insertCommand.Parameters.AddWithValue("memberId", memberId);
-            insertCommand.Parameters.AddWithValue("bookId", bookId);
-            insertCommand.Parameters.AddWithValue("daysAllowed", daysAllowed);
+            insert.Parameters.AddWithValue("member_id", memberId);
+            insert.Parameters.AddWithValue("book_id", bookId);
+            insert.Parameters.AddWithValue("days_allowed", daysAllowed);
 
-            await insertCommand.ExecuteNonQueryAsync();
+            await insert.ExecuteNonQueryAsync();
         }
 
         // 9. Commit the transaction.
@@ -138,5 +133,19 @@ public class LoanRepository
 
         // 10. Report that the book was borrowed.
         return true;
+    }
+
+    // RETURN: mark a loan as returned today.
+    public async Task ReturnAsync(long loanId)
+    {
+        const string sql =
+            "UPDATE lending.loan SET returned_on = CURRENT_DATE " +
+            "WHERE loan_id = @id AND returned_on IS NULL;";
+
+        await using var command = _dataSource.CreateCommand(sql);
+
+        command.Parameters.AddWithValue("id", loanId);
+
+        await command.ExecuteNonQueryAsync();
     }
 }

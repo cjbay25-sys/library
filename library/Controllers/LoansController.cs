@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace library.Controllers;
 
-// Answers every address that starts with /Loans.
 public class LoansController : Controller
 {
     private readonly LoanRepository _loans;
@@ -23,14 +22,14 @@ public class LoansController : Controller
         _books = books;
     }
 
-    // GET /Loans : every loan, newest first.
+    // GET /Loans
     public async Task<IActionResult> Index()
     {
         var loans = await _loans.GetAllAsync();
         return View(loans);
     }
 
-    // Fills the Borrow form's two dropdowns from the database.
+    // Fill member and book dropdowns.
     private async Task FillDropdownsAsync()
     {
         ViewBag.Members = new SelectList(
@@ -44,7 +43,7 @@ public class LoansController : Controller
             "Title");
     }
 
-    // GET /Loans/Borrow : the empty Borrow form.
+    // GET /Loans/Borrow
     [HttpGet]
     public async Task<IActionResult> Borrow()
     {
@@ -52,37 +51,38 @@ public class LoansController : Controller
         return View(new BorrowForm());
     }
 
-    // POST /Loans/Borrow : the form was submitted.
+    // POST /Loans/Borrow
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Borrow(BorrowForm form)
     {
-        // 1. Check whether every rule on the form was kept.
         if (ModelState.IsValid)
         {
-            // 2. Try to borrow the book, and keep the answer.
             bool saved = await _loans.BorrowAsync(
                 form.MemberId!.Value,
                 form.BookId!.Value,
                 form.DaysAllowed);
 
-            // 3. Check whether the loan was saved.
             if (saved)
             {
-                // 4. Go back to the list of loans.
                 return RedirectToAction(nameof(Index));
             }
 
-            // 5. Explain why nothing was saved.
             ModelState.AddModelError(
                 "",
                 $"This member already has {LoanRepository.MaxOpenLoans} books out. Nothing was saved.");
         }
 
-        // 6. Fill both dropdowns again.
         await FillDropdownsAsync();
-
-        // 7. Show the form again, with what was chosen.
         return View(form);
+    }
+
+    // POST /Loans/Return
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Return(long id)
+    {
+        await _loans.ReturnAsync(id);
+        return RedirectToAction(nameof(Index));
     }
 }
