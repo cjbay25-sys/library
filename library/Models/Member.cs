@@ -17,4 +17,4 @@ public class Member
 
     public string MemberType { get; set; } = "";     // member_type  VARCHAR(10) NOT NULL
     public long OpenLoans { get; set; }              // filled only by the member list; never saved
-s
+}

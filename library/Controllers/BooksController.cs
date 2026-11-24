@@ -1,5 +1,4 @@
-﻿
-using library.Data;
+﻿using library.Data;
 using library.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -54,6 +53,46 @@ namespace library.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Display the Edit Book form
+        [HttpGet]
+        public async Task<IActionResult> Edit(long id)
+        {
+            var book = await _repository.GetByIdAsync(id);
+
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            return View(book);
+        }
+
+        // Save the changes to the book
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Book book)
+        {
+            // Check that the price is positive.
+            if (book.Price.HasValue &&
+                (book.Price.Value < 0.01m || book.Price.Value > 99999.99m))
+            {
+                ModelState.AddModelError(
+                    nameof(Book.Price),
+                    "The price must be from 0.01 to 99,999.99."
+                );
+            }
+
+            // Do not save if validation fails.
+            if (!ModelState.IsValid)
+            {
+                return View(book);
+            }
+
+            await _repository.UpdateAsync(book);
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // Display the Delete confirmation page
         [HttpGet]
         public async Task<IActionResult> Delete(long id)
@@ -67,22 +106,6 @@ namespace library.Controllers
 
             return View(book);
         }
-
-        // Delete the selected book
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(long id)
-        {
-            var book = await _repository.GetByIdAsync(id);
-
-            if (book == null)
-            {
-                return NotFound();
-            }
-
-            await _repository.DeleteAsync(id);
-
-            return RedirectToAction(nameof(Index));
-        }
     }
 }
+        // Delete the selected book
